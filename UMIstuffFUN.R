@@ -265,7 +265,7 @@ umiCollapseHam<-function(reads,bccount,HamDist=1){
     use_cores <- opt$num_threads
   }
   #run:
-  out_mm <- mclapply(readsamples_list, function(x) ham_helper_fun(x), mc.cores = use_cores, mc.preschedule = TRUE)
+  out_mm <- parallel::mclapply(readsamples_list, function(x) ham_helper_fun(x), mc.cores = use_cores, mc.preschedule = TRUE)
   out_mm <- rbindlist(out_mm)
   write_molecule_mapping(out_mm)
 
