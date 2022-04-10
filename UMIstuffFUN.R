@@ -74,7 +74,7 @@ reads2genes_new <- function(featfile, bccount, inex, chunk, cores, keepUnassigne
   idxstats[,1] <- factor(as.character(idxstats[,1]), levels = seqnames(seqinfo(BamFile(featfile))))
   print(idxstats)
 
-  rsamtools_reads <- mclapply(1:nrow(idxstats), function(x) {
+  rsamtools_reads <- parallel::mclapply(1:nrow(idxstats), function(x) {
     if(opt$read_layout == "PE"){
       parms <- ScanBamParam(tag=taglist,
                             what="pos",
@@ -320,15 +320,20 @@ collectCounts<-function(reads,bccount,subsample.splits, mapList, ...){
 
 
 bindList<-function(alldt,newdt){
+  outDT <- data.table::copy(alldt)
   for( i in names(alldt)){
-    alldt[[i]][[1]]<-rbind(alldt[[i]][[1]], newdt[[i]][[1]] )
+    outDT[[i]][[1]]<-rbind(alldt[[i]][[1]], newdt[[i]][[1]] )
     if("downsampling" %in% names(newdt[[i]])){
-      for(j in names(alldt[[i]][[2]])){
-        alldt[[i]][[2]][[j]]<-rbind(alldt[[i]][[2]][[j]],newdt[[i]][[2]][[j]])
+      if(!is.null(alldt[[i]])){
+        for(j in names(alldt[[i]][[2]])){
+          outDT[[i]][[2]][[j]]<-rbind(alldt[[i]][[2]][[j]],newdt[[i]][[2]][[j]])
+        }
+      } else {
+        outDT[[i]] <- newdt[[i]]
       }
     }
   }
-  return(alldt)
+  return(outDT)
 }
 
 convert2countM<-function(alldt,what){
